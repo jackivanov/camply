@@ -27,6 +27,7 @@ NON_GROUP_EQUIPMENT = -32768
 CAMP_SITE = -2147483648
 OVERFLOW_SITE = -2147483647
 GROUP_SITE = -2147483643
+BACKCOUNTRY_SITE = -2147483632
 
 ENDPOINTS = {
     "CAMP_DETAILS": "https://{}/api/maps",
@@ -365,7 +366,7 @@ class GoingToCamp(BaseProvider):
         for facil in facilities:
             try:
                 location_name = _fetch_nested_key(
-                    facil, "localizedValues", 0, "fullName"
+                    facil, "localizedValues", {"cultureName": "en-CA"}, "fullName"
                 )
                 park_alerts = _fetch_nested_key(
                     facil, "park_alerts", "en-US", 0, "messageTitle"
@@ -402,6 +403,7 @@ class GoingToCamp(BaseProvider):
                     CAMP_SITE in facility.resource_categories,
                     GROUP_SITE in facility.resource_categories,
                     OVERFLOW_SITE in facility.resource_categories,
+                    BACKCOUNTRY_SITE in facility.resource_categories,
                 ]
             ):
                 filtered_facilities.append(facility)
@@ -570,7 +572,17 @@ def _fetch_nested_key(obj: Union[dict, list, object], *keys: str) -> Any:
     _element = obj
     for key in keys:
         try:
-            _element = _element[key]
+            if isinstance(key, dict):
+                _element = next(
+                    (
+                        item
+                        for item in _element
+                        if all(item.get(k) == v for k, v in key.items())
+                    ),
+                    None,
+                )
+            else:
+                _element = _element[key]
             if not _element:
                 _element = getattr(_element, key)
         except (KeyError, TypeError, AttributeError):
