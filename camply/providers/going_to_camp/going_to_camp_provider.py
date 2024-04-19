@@ -368,6 +368,10 @@ class GoingToCamp(BaseProvider):
                 location_name = _fetch_nested_key(
                     facil, "localizedValues", {"cultureName": "en-CA"}, "fullName"
                 )
+                if not location_name:
+                  location_name = _fetch_nested_key(
+                      facil, "localizedValues", 0, "fullName"
+                  )
                 park_alerts = _fetch_nested_key(
                     facil, "park_alerts", "en-US", 0, "messageTitle"
                 )
